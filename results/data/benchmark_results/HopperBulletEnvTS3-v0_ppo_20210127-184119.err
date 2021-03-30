@@ -1,0 +1,36 @@
+Traceback (most recent call last):
+  File "run.py", line 174, in main
+    run(trainer, args, log_file)
+  File "run.py", line 96, in run
+    out = train_step(trainer)
+  File "run.py", line 85, in train_step
+    return trainer.train()
+  File "/home/jlyskawa/.pyenv/versions/3.7.9/lib/python3.7/site-packages/ray/rllib/agents/trainer.py", line 520, in train
+    evaluation_metrics = self._evaluate()
+  File "/home/jlyskawa/.pyenv/versions/3.7.9/lib/python3.7/site-packages/ray/rllib/agents/trainer.py", line 740, in _evaluate
+    self.evaluation_workers.local_worker().sample()
+  File "/home/jlyskawa/.pyenv/versions/3.7.9/lib/python3.7/site-packages/ray/rllib/evaluation/rollout_worker.py", line 638, in sample
+    batches = [self.input_reader.next()]
+  File "/home/jlyskawa/.pyenv/versions/3.7.9/lib/python3.7/site-packages/ray/rllib/evaluation/sampler.py", line 94, in next
+    batches = [self.get_data()]
+  File "/home/jlyskawa/.pyenv/versions/3.7.9/lib/python3.7/site-packages/ray/rllib/evaluation/sampler.py", line 211, in get_data
+    item = next(self.rollout_provider)
+  File "/home/jlyskawa/.pyenv/versions/3.7.9/lib/python3.7/site-packages/ray/rllib/evaluation/sampler.py", line 651, in _env_runner
+    base_env.send_actions(actions_to_send)
+  File "/home/jlyskawa/.pyenv/versions/3.7.9/lib/python3.7/site-packages/ray/rllib/env/base_env.py", line 346, in send_actions
+    self.vector_env.vector_step(action_vector)
+  File "/home/jlyskawa/.pyenv/versions/3.7.9/lib/python3.7/site-packages/ray/rllib/env/vector_env.py", line 143, in vector_step
+    obs, r, done, info = self.envs[i].step(actions[i])
+  File "/home/jlyskawa/ai-research-benchmarks/wrappers.py", line 85, in step
+    obs, rew, done, info = self.env.step(action)
+  File "/home/jlyskawa/.pyenv/versions/3.7.9/lib/python3.7/site-packages/gym/core.py", line 292, in step
+    return self.env.step(self.action(action))
+  File "/home/jlyskawa/.pyenv/versions/3.7.9/lib/python3.7/site-packages/gym/core.py", line 280, in step
+    observation, reward, done, info = self.env.step(action)
+  File "/home/jlyskawa/.pyenv/versions/3.7.9/lib/python3.7/site-packages/gym/wrappers/time_limit.py", line 16, in step
+    observation, reward, done, info = self.env.step(action)
+  File "/home/jlyskawa/.pyenv/versions/3.7.9/lib/python3.7/site-packages/pybullet_envs/gym_locomotion_envs.py", line 66, in step
+    self.robot.apply_action(a)
+  File "/home/jlyskawa/.pyenv/versions/3.7.9/lib/python3.7/site-packages/pybullet_envs/robot_locomotors.py", line 31, in apply_action
+    assert (np.isfinite(a).all())
+AssertionError
