@@ -38,6 +38,7 @@ parser.add_argument('--n_step', type=int, help='experience replay frequency', re
 parser.add_argument('--c', type=int, help='experience replay intensity', required=False, default=1)
 parser.add_argument('--c0', type=float, help='experience replay warm start coefficient', default=1)
 parser.add_argument('--alpha', type=float, help='Alpha parameter for acerac.', default=0.5)
+parser.add_argument('--tau', type=int, help='Tau parameter for acerac', default=2)
 parser.add_argument('--n', type=int, help='N parameter for acerac', default=2)
 parser.add_argument('--noise_type', type=str, help='Type of noise for ACERAC',
                     default='autocor+u', choices=list(AUTOCORRELATED_ACTORS))
