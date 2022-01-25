@@ -631,4 +631,20 @@ class BaseACERAgent(ABC):
 
         self._memory.save(buffer_path)
 
+    def load(self, path: Path, **kwargs):
+        actor_path = str(path / 'actor.tf')
+        critic_path = str(path / 'critic.tf')
+        buffer_path = str(path / 'buffer.pkl')
 
+        self._actor.load_weights(actor_path, overwrite=True)
+        self._critic.load_weights(critic_path, overwrite=True)
+
+        if self._running_mean_obs:
+            rms_obs_path = str(path / 'rms_obs.pkl')
+            self._running_mean_obs.load(rms_obs_path)
+
+        if self._running_mean_rewards:
+            rms_rewards_path = str(path / 'rms_rewards.pkl')
+            self._running_mean_rewards.load(rms_rewards_path)
+
+        self._memory.load(buffer_path)

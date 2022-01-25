@@ -7,8 +7,8 @@ from typing import Optional, List, Union, Tuple
 from pathlib import Path
 
 import gym
-import pybullet_envs
 import numpy as np
+from numpy.typing import NDArray
 import tensorflow as tf
 from gym import wrappers
 
@@ -23,7 +23,6 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)-5.5s]  %(message)s",
 )
 
-
 ALGOS = {
     'acer': ACER,
     'acerac': ACERAC,
@@ -34,16 +33,16 @@ def _get_agent(algorithm: str, parameters: Optional[dict], observations_space: g
                actions_space: gym.Space) -> BaseACERAgent:
     if not parameters:
         parameters = {}
-    
+
     if algorithm not in ALGOS:
-        raise NotImplemented
+        raise NotImplementedError
 
     return ALGOS[algorithm](observations_space=observations_space, actions_space=actions_space, **parameters)
 
 
 def _get_env(env_id: str, num_parallel_envs: int, asynchronous: bool = True) -> gym.vector.AsyncVectorEnv:
     builder = getPossiblyDTChangedEnvBuilder(env_id)
-    
+
     builders = [builder for _ in range(num_parallel_envs)]
     env = gym.vector.AsyncVectorEnv(builders) if asynchronous else gym.vector.SyncVectorEnv(builders)
     return env
@@ -53,11 +52,23 @@ class Runner:
 
     MEASURE_TIME_TIME_STEPS = 1000
 
-    def __init__(self, environment_name: str, algorithm: str = 'acer', algorithm_parameters: Optional[dict] = None,
-                 num_parallel_envs: int = 5, evaluate_time_steps_interval: int = 1500, n_step: int = 1,
-                 num_evaluation_runs: int = 5, log_dir: str = 'logs/', max_time_steps: int = -1,
-                 record_end: bool = True, experiment_name: str = None, asynchronous: bool = True,
-                 log_tensorboard: bool = True, do_checkpoint: bool = True, record_time_steps: int = None, dump=()):
+    def __init__(self,
+                 environment_name: str,
+                 algorithm: str = 'acer',
+                 algorithm_parameters: Optional[dict] = None,
+                 num_parallel_envs: int = 5,
+                 evaluate_time_steps_interval: int = 1500,
+                 n_step: int = 1,
+                 num_evaluation_runs: int = 5,
+                 log_dir: str = 'logs/',
+                 max_time_steps: int = -1,
+                 record_end: bool = True,
+                 experiment_name: str = None,
+                 asynchronous: bool = True,
+                 log_tensorboard: bool = True,
+                 do_checkpoint: bool = True,
+                 record_time_steps: int = None,
+                 dump=()):
         """Trains and evaluates the agent.
 
         Args:
@@ -89,14 +100,11 @@ class Runner:
         self._do_checkpoint = do_checkpoint
         self._env_name = environment_name
         if experiment_name:
-            self._log_dir = Path(
-                f"{log_dir}/{environment_name}_{algorithm}_{experiment_name}"
-                f"_{datetime.datetime.now().strftime('%Y%m%d-%H%M%S')}"
-            )
+            self._log_dir = Path(f"{log_dir}/{environment_name}_{algorithm}_{experiment_name}"
+                                 f"_{datetime.datetime.now().strftime('%Y%m%d-%H%M%S')}")
         else:
             self._log_dir = Path(
-                f"{log_dir}/{environment_name}_{algorithm}_{datetime.datetime.now().strftime('%Y%m%d-%H%M%S')}"
-            )
+                f"{log_dir}/{environment_name}_{algorithm}_{datetime.datetime.now().strftime('%Y%m%d-%H%M%S')}")
         self._log_dir.mkdir(parents=True, exist_ok=True)
 
         self._record_end = record_end
@@ -117,10 +125,8 @@ class Runner:
             tensor_board_writer = tf.summary.create_file_writer(str(self._log_dir))
             tensor_board_writer.set_as_default()
 
-        self._csv_logger = CSVLogger(
-            self._log_dir / 'results.csv',
-            keys=['time_step', 'eval_return_mean', 'eval_std_mean']
-        )
+        self._csv_logger = CSVLogger(self._log_dir / 'results.csv',
+                                     keys=['time_step', 'eval_return_mean', 'eval_std_mean'])
 
         self._save_parameters(algorithm_parameters)
         self._agent = _get_agent(algorithm, algorithm_parameters, dummy_env.observation_space, dummy_env.action_space)
@@ -160,7 +166,7 @@ class Runner:
         self._csv_logger.dump()
         logging.info(f"saved evaluation results in {self._log_dir}")
 
-    def _step(self) -> List[Tuple[Union[int, float], np.array, float, float, bool, bool]]:
+    def _step(self) -> List[Tuple[Union[int, float], NDArray, float, float, bool, bool]]:
         actions, policies = self._agent.predict_action(self._current_obs)
         steps = self._env.step(actions)
         rewards = []
@@ -184,9 +190,7 @@ class Runner:
             is_end = is_done or is_maximum_number_of_steps_reached
 
             reward = steps[1][i]
-            experience.append(
-                (actions[i], old_obs[i], self._current_obs[i], reward, policies[i], is_done, is_end)
-            )
+            experience.append((actions[i], old_obs[i], self._current_obs[i], reward, policies[i], is_done, is_end))
 
             self._returns[i] += steps[1][i]
             self._rewards[i].append(steps[1][i])
@@ -208,7 +212,7 @@ class Runner:
                 self._done_steps_in_a_episode[i] = 0
 
         self._current_obs = np.array(self._current_obs)
-        return experience
+        return experience  # type: ignore
 
     def _evaluate(self):
         self._next_evaluation_timestamp += self._evaluate_time_steps_interval
@@ -234,8 +238,7 @@ class Runner:
                     is_end = is_done_gym or is_maximum_number_of_steps_reached
                     envs_finished[i] = is_end
                     if is_end:
-                        logging.info(f"evaluation run, "
-                                     f"return: {returns[i]}")
+                        logging.info(f"evaluation run, " f"return: {returns[i]}")
 
         mean_returns = np.mean(returns)
         std_returns = np.std(returns)
@@ -244,17 +247,21 @@ class Runner:
             tf.summary.scalar('evaluation_return_mean', mean_returns, self._time_step)
             tf.summary.scalar('evaluation_return_std', std_returns, self._time_step)
 
-        self._csv_logger.log_values(
-            {'time_step': self._time_step, 'eval_return_mean': mean_returns, 'eval_std_mean': std_returns}
-        )
+        self._csv_logger.log_values({
+            'time_step': self._time_step,
+            'eval_return_mean': mean_returns,
+            'eval_std_mean': std_returns
+        })
 
     def record_video(self):
         if self._record_time_steps:
             self._next_record_timestamp += self._record_time_steps
-        logging.info(f"saving video...")
+        logging.info("saving video...")
         try:
-            env = wrappers.Monitor(gym.make(self._env_name), self._log_dir / f'video-{self._time_step}',
-                                   force=True, video_callable=lambda x: True)
+            env = wrappers.Monitor(gym.make(self._env_name),
+                                   self._log_dir / f'video-{self._time_step}',
+                                   force=True,
+                                   video_callable=lambda x: True)
             is_end = False
             time_step = 0
             current_obs = np.array([env.reset()])
@@ -284,11 +291,8 @@ class Runner:
 
     def _measure_time(self):
         with tf.name_scope('acer'):
-            tf.summary.scalar(
-                'time steps per second',
-                Runner.MEASURE_TIME_TIME_STEPS / self._elapsed_time_measure,
-                self._time_step
-            )
+            tf.summary.scalar('time steps per second', Runner.MEASURE_TIME_TIME_STEPS / self._elapsed_time_measure,
+                              self._time_step)
         self._elapsed_time_measure = 0
 
     def _save_parameters(self, algorithm_parameters: dict):

@@ -2,22 +2,23 @@ import pickle
 from functools import partial, wraps
 from time import time
 from typing import Tuple, List, Union, Dict
-import importlib
+# import importlib
 import re
 
 import gym
 import numpy as np
+from numpy.typing import NDArray
 import tensorflow as tf
-import pybullet_envs  # make sure bullet envs are registered
-from pybullet_envs.scene_stadium import SinglePlayerStadiumScene
 
 
 def normc_initializer():
     """Normalized column initializer from the OpenAI baselines"""
+
     def _initializer(shape, dtype=None, partition_info=None):
         out = np.random.randn(*shape)
         out *= 1 / np.sqrt(np.square(out).sum(axis=0, keepdims=True))
         return tf.constant(out, dtype=dtype)
+
     return _initializer
 
 
@@ -82,6 +83,7 @@ def get_env_variables(env):
 
 
 class RunningMeanVariance:
+
     def __init__(self, epsilon: float = 1e-4, shape: Tuple = ()):
         """Computes running mean and variance with Welford's online algorithm (Parallel algorithm)
 
@@ -96,7 +98,7 @@ class RunningMeanVariance:
         self.var = np.ones(shape=shape, dtype=np.float32)
         self.count = epsilon
 
-    def update(self, x: np.array):
+    def update(self, x: NDArray):
         """Updates statistics with given batch [batch_size, vector_size] of samples
 
         Args:
@@ -127,13 +129,15 @@ class RunningMeanVariance:
 
 def timing(f):
     """Function decorator that measures time elapsed while executing a function."""
+
     @wraps(f)
     def wrap(*args, **kw):
         ts = time()
         result = f(*args, **kw)
         te = time()
-        print('func:%r took: %2.4f sec' % (f.__name__, te-ts))
+        print('func:%r took: %2.4f sec' % (f.__name__, te - ts))
         return result
+
     return wrap
 
 
@@ -152,34 +156,23 @@ def getPossiblyDTChangedEnvBuilder(env_name):
     version = match.group(3)
 
     base_name = f'{name}-v{version}'
-    
+
     base_spec = gym.envs.registry.env_specs[base_name]
 
-    mod_name, attr_name = base_spec.entry_point.split(":")
-    mod = importlib.import_module(mod_name)
-    base_class = getattr(mod, attr_name)
+    # mod_name, _ = base_spec.entry_point.split(":")
+    # importlib.import_module(mod_name)
 
-    class TimeStepChangedEnv(base_class):
-        def create_single_player_scene(self, bullet_client):
-            self.stadium_scene = SinglePlayerStadiumScene(bullet_client,
-                                                        gravity=9.8,
-                                                        timestep=0.0165 / timesteps_increase / 4,
-                                                        frame_skip=4)
-            return self.stadium_scene
-    
     def builder():
-        env = TimeStepChangedEnv()
+        env = gym.make(base_name)
 
         if base_spec.max_episode_steps:
-            env = gym.wrappers.TimeLimit(
-                gym.wrappers.TransformReward(env, lambda r: r / 3),
-                base_spec.max_episode_steps * timesteps_increase
-            )
-        
+            env = gym.wrappers.TimeLimit(gym.wrappers.TransformReward(env, lambda r: r / 3),
+                                         base_spec.max_episode_steps * timesteps_increase)
+
         return env
-    
+
     return builder
 
 
 def calculate_gamma(gamma0, timesteps_increase):
-    return gamma0 ** (1 / timesteps_increase)
+    return gamma0**(1 / timesteps_increase)

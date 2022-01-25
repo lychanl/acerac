@@ -64,3 +64,7 @@ class RunningMeanVarianceTf:
     def save(self, path: str):
         """Saves the state on disk"""
         pass
+
+    def load(self, path: str):
+        """Load the state from disk"""
+        pass
