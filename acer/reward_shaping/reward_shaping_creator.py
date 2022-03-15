@@ -1,9 +1,9 @@
 import gym
 
+# This creator class is by gym register function, and allows parametrization of reward shaping wrapper
 from acer.reward_shaping.wrapper import RewardShapingWrapper
 
 
-# This creator class is by gym register function, and allows parametrization of reward shaping wrapper
 class RewardShapingEnvironmentCreator:
     def __init__(self, env: str, gamma: float, fi: callable, fi_t0: float):
         assert isinstance(env, str), "Environment parameter must be a string"
