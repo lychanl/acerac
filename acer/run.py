@@ -1,15 +1,13 @@
 import argparse
-import signal
-
 import os
-# os.environ["CUDA_VISIBLE_DEVICES"]="-1"
-
+import signal
 import tensorflow as tf
 
+from algos.acerac import AUTOCORRELATED_ACTORS
 from runners import Runner, ALGOS
 from utils import calculate_gamma, getDTChangedEnvName
 
-from algos.acerac import AUTOCORRELATED_ACTORS
+# os.environ["CUDA_VISIBLE_DEVICES"]="-1"
 
 parser = argparse.ArgumentParser(description='BaseActor-Critic with experience replay.')
 parser.add_argument('--algo', type=str, help='Algorithm to be used', default="acer", choices=ALGOS)
@@ -48,7 +46,8 @@ parser.add_argument('--std', type=float, help='value on diagonal of Normal dist.
 parser.add_argument('--learning_starts', type=int, help='experience replay warm start coefficient', default=10000)
 parser.add_argument('--memory_size', type=int, help='memory buffer size (sum of all of the buffers from every env',
                     required=False, default=1e6)
-parser.add_argument('--actor_layers', nargs='+', type=int, help='List of BaseActor\'s neural network hidden layers sizes',
+parser.add_argument('--actor_layers', nargs='+', type=int,
+                    help='List of BaseActor\'s neural network hidden layers sizes',
                     required=False, default=(100, 100))
 parser.add_argument('--critic_layers', nargs='+', type=int, help='List of Critic\'s neural network hidden layers sizes',
                     required=False, default=(100, 100))
@@ -95,12 +94,25 @@ parser.add_argument('--use_cpu', action='store_true',
 parser.add_argument('--synchronous', action='store_true',
                     help='True if not use asynchronous envs')
 parser.add_argument('--timesteps_increase', help='Timesteps per second increase. Affects:'
-     ' gamma, max time steps, memory size, lam, n, alpha, evaluate_time_steps_interval, n_step', type=int, default=None)
+                                                 ' gamma, max time steps, memory size, lam, n, alpha, evaluate_time_steps_interval, n_step',
+                    type=int, default=None)
 
 parser.add_argument('--dump', help='Dump memory and models on given timesteps', nargs='*', type=int)
 
+
 def main():
     args = parser.parse_args()
+
+    fi_x = FiFactory.get_fi("default")
+    environment_with_reward_shaping = RewardShapingEnvironmentCreator(
+        "Humanoid-v2", args["gamma"],
+        fi_x,
+        fi_x([1.4]))
+
+    gym.envs.register(
+        id="RewardShapingHumanoid-v2",
+        entry_point=environment_with_reward_shaping,
+    )
 
     cmd_parameters, unknown_args = parser.parse_known_args()
     if len(unknown_args):
