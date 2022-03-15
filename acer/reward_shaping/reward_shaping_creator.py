@@ -1,6 +1,6 @@
 import gym
 
-from src.reward_shaping.wrapper import RewardShapingWrapper
+from acer.reward_shaping.wrapper import RewardShapingWrapper
 
 
 # This creator class is by gym register function, and allows parametrization of reward shaping wrapper
