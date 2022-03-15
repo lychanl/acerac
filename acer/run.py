@@ -4,8 +4,8 @@ import signal
 import tensorflow as tf
 import gym
 
-from acer.reward_shaping.fi import FiFactory
-from acer.reward_shaping.reward_shaping_creator import RewardShapingEnvironmentCreator
+from reward_shaping.fi import FiFactory
+from reward_shaping.reward_shaping_creator import RewardShapingEnvironmentCreator
 from algos.acerac import AUTOCORRELATED_ACTORS
 from runners import Runner, ALGOS
 from utils import calculate_gamma, getDTChangedEnvName
