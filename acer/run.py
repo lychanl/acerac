@@ -108,7 +108,7 @@ def main():
 
     fi_x = FiFactory.get_fi("default")
     environment_with_reward_shaping = RewardShapingEnvironmentCreator(
-        "Humanoid-v2", args["gamma"],
+        "Humanoid-v2", args.gamma,
         fi_x,
         fi_x([1.4]))
 
