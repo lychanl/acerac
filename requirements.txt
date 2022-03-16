@@ -1,6 +1,5 @@
-gym==0.17.3
-cloudpickle==1.4.1
+gym==0.17.2
 pybullet==2.6.6
-tensorflow-gpu==2.2.0
-tensorflow-probability==0.10.0
+tensorflow-gpu==2.1.0
+tensorflow-probability==0.8.0
 numpy==1.17.3
