@@ -19,16 +19,8 @@ class RewardShapingWrapper(gym.Wrapper):
 
     def step(self, action):
         next_state, reward, done, info = self.env.step(action)
-
-        old_reward_type = type(reward)
-
         fi_value = self._fi(next_state)
-
         reward = reward - self._last_fi_value + self._gamma * fi_value
-
-        assert old_reward_type == type(
-            reward), f"Old reward type is different then new type: {old_reward_type} != {type(reward)}"
-
         self._last_fi_value = fi_value
 
         return next_state, reward, done, info

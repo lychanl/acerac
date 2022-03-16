@@ -1,12 +1,12 @@
 import argparse
-import os
 import signal
-import tensorflow as tf
-import gym
 
+import gym
+import tensorflow as tf
+
+from algos.acerac import AUTOCORRELATED_ACTORS
 from reward_shaping.fi import FiFactory
 from reward_shaping.reward_shaping_creator import RewardShapingEnvironmentCreator
-from algos.acerac import AUTOCORRELATED_ACTORS
 from runners import Runner, ALGOS
 from utils import calculate_gamma, getDTChangedEnvName
 
@@ -110,7 +110,7 @@ def main():
     environment_with_reward_shaping = RewardShapingEnvironmentCreator(
         "Humanoid-v2", args.gamma,
         fi_x,
-        fi_x([1.4]))
+        fi_x([1.4]))  # 1.4 is the value of mean (starting) value of vertical position (z-axis)
 
     gym.envs.register(
         id="RewardShapingHumanoid-v2",
